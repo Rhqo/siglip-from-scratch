@@ -15,6 +15,8 @@ cosine_similarity.min():  tensor(0.9999)
 ```
 
 ### architecture
+![image](./architecture.jpeg)
+
 **Custom Model**
 
 ```python
