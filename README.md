@@ -62,3 +62,54 @@ custom_model :  SigLipVisionModel(
 )
 )
 ```
+
+**Original Model**
+
+```python
+from transformers import SiglipVisionModel, SiglipVisionConfig
+config = SiglipVisionConfig(vision_use_head=True)   # before pooling : vision_use_head=False
+original_model = SiglipVisionModel.from_pretrained("google/siglip-base-patch16-224", config=config)
+print("original_model : ", original_model)
+```
+
+```bash
+original_model :  SiglipVisionModel(
+  (vision_model): SiglipVisionTransformer(
+    (embeddings): SiglipVisionEmbeddings(
+      (patch_embedding): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), padding=valid)
+      (position_embedding): Embedding(196, 768)
+    )
+    (encoder): SiglipEncoder(
+      (layers): ModuleList(
+        (0-11): 12 x SiglipEncoderLayer(
+          (layer_norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attn): SiglipAttention(
+            (k_proj): Linear(in_features=768, out_features=768, bias=True)
+            (v_proj): Linear(in_features=768, out_features=768, bias=True)
+            (q_proj): Linear(in_features=768, out_features=768, bias=True)
+            (out_proj): Linear(in_features=768, out_features=768, bias=True)
+          )
+          (layer_norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): SiglipMLP(
+            (activation_fn): PytorchGELUTanh()
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+          )
+        )
+      )
+    )
+    (post_layernorm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+    (head): SiglipMultiheadAttentionPoolingHead(    # ↓ vision_use_head = True
+      (attention): MultiheadAttention(
+        (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+      )
+      (layernorm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      (mlp): SiglipMLP(
+        (activation_fn): PytorchGELUTanh()
+        (fc1): Linear(in_features=768, out_features=3072, bias=True)
+        (fc2): Linear(in_features=3072, out_features=768, bias=True)
+      )
+    )
+  )
+)
+```
