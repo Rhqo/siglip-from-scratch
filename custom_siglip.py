@@ -179,7 +179,7 @@ class SigLipVisionTransformer(nn.Module):
         self.embeddings = VisionEmbeddings(config)
         self.encoder = SigLipEncoder(config)
         self.post_layernorm = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)
-        self.attn_pooling_head = SiglipMultiheadAttentionPoolingHead(config)
+        self.attn_pooling_head = MultiheadAttentionPoolingHead(config)
 
     def forward(self, pixel_values):
         # (B, 3, 224, 224) -> (B, 196, 768)
@@ -191,8 +191,7 @@ class SigLipVisionTransformer(nn.Module):
         out = self.attn_pooling_head(last_hidden_state)
         return [last_hidden_state, out]
 
-class SiglipMultiheadAttentionPoolingHead(nn.Module):
-
+class MultiheadAttentionPoolingHead(nn.Module):
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
 
