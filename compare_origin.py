@@ -1,16 +1,11 @@
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from transformers import SiglipVisionModel
-from transformers import SiglipVisionConfig as OriginalSiglipVisionConfig
 
 from custom_siglip import preprocess_image, SigLipVisionModel, SigLipVisionConfig 
 
-def OriginalSigLipVisionModel():
-    # before pooling : vision_use_head=False
-    config = OriginalSiglipVisionConfig(vision_use_head=True)
-    model = SiglipVisionModel.from_pretrained("google/siglip-base-patch16-224", config=config)
-    return model
+from transformers import SiglipVisionModel as OriginalSiglipVisionModel
+from transformers import SiglipVisionConfig as OriginalSiglipVisionConfig
 
 def load_pretrained_weights(custom_model, pretrained_model):
     # Load the pretrained weights from the original model
@@ -54,7 +49,9 @@ if __name__ == "__main__":
     )
 
     custom_model = SigLipVisionModel(config)
-    original_model = OriginalSigLipVisionModel()
+
+    original_config = OriginalSiglipVisionConfig(vision_use_head=True)
+    original_model = OriginalSiglipVisionModel.from_pretrained("google/siglip-base-patch16-224", config=original_config)
 
     # print("custom_model : ", custom_model)
     # print("original_model : ", original_model)
