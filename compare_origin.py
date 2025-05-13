@@ -8,28 +8,40 @@ from transformers import SiglipVisionModel as OriginalSiglipVisionModel
 from transformers import SiglipVisionConfig as OriginalSiglipVisionConfig
 
 def load_pretrained_weights(custom_model, pretrained_model):
-    # Load the pretrained weights from the original model
     pretrained_dict = pretrained_model.state_dict()
     custom_dict = custom_model.state_dict()
-
+    
     mapped_dict = {}
-
+    
+    # original: custom
+    key_replacements = {
+        'vision_model.': 'transformer.',
+        'encoder.layers.': 'encoder.encoder_blocks.',
+        'head.': 'attn_pooling_head.'
+    }
+    
+    total_keys = len(pretrained_dict)
+    mapped_count = 0
+    shape_mismatch_count = 0
+    
     for key, value in pretrained_dict.items():
-        # vision_model -> transformer
-        if key.startswith('vision_model.'):
-            new_key = key.replace('vision_model.', 'transformer.')
-        else:
-            new_key = key
+        new_key = key
+        for old_str, new_str in key_replacements.items():
+            if old_str in new_key:
+                new_key = new_key.replace(old_str, new_str)
         
-        # layers -> encoder_blocks
-        if 'encoder.layers.' in new_key:
-            new_key = new_key.replace('encoder.layers.', 'encoder.encoder_blocks.')
-        
-        # 커스텀 모델에 해당 키가 있으면 매핑
         if new_key in custom_dict:
-            mapped_dict[new_key] = value
-
+            if value.shape == custom_dict[new_key].shape:
+                mapped_dict[new_key] = value
+                mapped_count += 1
+            else:
+                shape_mismatch_count += 1
+    
+    # Load weights into custom model
     custom_model.load_state_dict(mapped_dict, strict=False)
+    
+    print(f"Mapped {mapped_count} out of {total_keys} keys")
+
 
 if __name__ == "__main__":
     image = Image.open("image.jpg")
@@ -63,9 +75,9 @@ if __name__ == "__main__":
         custom_out = custom_model(image_tensor)
         original_out = original_model(image_tensor)
 
-    print("siglip_custom.shape: ", custom_out.shape)
-    print("siglip_original.shape: ", original_out[0].shape)
+    print("siglip_custom-last_hidden_state.shape: ", custom_out[0].shape)
+    print("siglip_original-last_hidden_state.shape: ", original_out[0].shape)
     print("siglip_original-afterPooling.shape: ", original_out[1].shape)
-    cosine_similarity = F.cosine_similarity(custom_out, original_out[0])
+    cosine_similarity = F.cosine_similarity(custom_out[1], original_out[1])
     print("cosine_similarity.mean(): ", cosine_similarity.mean())
     print("cosine_similarity.min(): ", cosine_similarity.min())

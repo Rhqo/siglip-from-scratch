@@ -23,7 +23,7 @@ load_pretrained_weights(custom_model, original_model)
 
 with torch.no_grad():
     # (1, 3, 224, 224) -> (1, 196, 768)
-    last_hidden_state = custom_model(image_tensor)
+    last_hidden_state = custom_model(image_tensor)[0]
 
 
 last_hidden_state_np = last_hidden_state.squeeze(0).cpu().numpy()

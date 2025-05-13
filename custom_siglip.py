@@ -126,12 +126,13 @@ class MLP(nn.Module):
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
         self.config = config
+        self.activation_gelu = nn.GELU()
         self.fc1 = nn.Linear(config.embed_dim, config.mlp_hidden_dim)
         self.fc2 = nn.Linear(config.mlp_hidden_dim, config.embed_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc1(x)
-        x = nn.functional.gelu(x)
+        x = self.activation_gelu(x)
         x = self.fc2(x)
         return x
 
@@ -169,8 +170,6 @@ class SigLipEncoder(nn.Module):
         for block in self.encoder_blocks:
             x = block(x)
         return x
-
-# class SigLipPoolingHead(nn.Module):
     
 class SigLipVisionTransformer(nn.Module):
     def __init__(self, config: SigLipVisionConfig):
@@ -180,16 +179,40 @@ class SigLipVisionTransformer(nn.Module):
         self.embeddings = VisionEmbeddings(config)
         self.encoder = SigLipEncoder(config)
         self.post_layernorm = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)
+        self.attn_pooling_head = SiglipMultiheadAttentionPoolingHead(config)
 
     def forward(self, pixel_values):
         # (B, 3, 224, 224) -> (B, 196, 768)
         embeddings = self.embeddings(pixel_values)
         # (B, 196, 768) -> (B, 196, 768)
         encoder_out = self.encoder(embeddings)
-        out = self.post_layernorm(encoder_out)
+        last_hidden_state = self.post_layernorm(encoder_out)
+        # (B, 196, 768) -> (B, 768)
+        out = self.attn_pooling_head(last_hidden_state)
+        return [last_hidden_state, out]
 
-        return out
-    
+class SiglipMultiheadAttentionPoolingHead(nn.Module):
+
+    def __init__(self, config: SigLipVisionConfig):
+        super().__init__()
+
+        self.probe = nn.Parameter(torch.randn(1, 1, config.embed_dim))
+        self.attention = torch.nn.MultiheadAttention(config.embed_dim, config.num_attention_heads, batch_first=True)
+        self.layernorm = nn.LayerNorm(config.embed_dim, eps=config.layer_norm_eps)
+        self.mlp = MLP(config)
+
+    def forward(self, hidden_state):
+        batch_size = hidden_state.shape[0]
+        probe = self.probe.repeat(batch_size, 1, 1)
+
+        hidden_state = self.attention(probe, hidden_state, hidden_state)[0]
+
+        residual = hidden_state
+        hidden_state = self.layernorm(hidden_state)
+        hidden_state = residual + self.mlp(hidden_state)
+
+        return hidden_state[:, 0]
+
 class SigLipVisionModel(nn.Module):
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
@@ -197,6 +220,6 @@ class SigLipVisionModel(nn.Module):
         self.transformer = SigLipVisionTransformer(config)
 
     def forward(self, pixel_values):
-        # (B, 3, 224, 224) -> (B, 768)
+        # (B, 3, 224, 224) -> [(B, 196, 768), (B, 768)]
         out = self.transformer(pixel_values)
         return out
