@@ -76,6 +76,7 @@ if __name__ == "__main__":
         original_out = original_model(image_tensor)
 
     print("siglip_custom-last_hidden_state.shape: ", custom_out[0].shape)
+    print("siglip_custom-afterPooling.shape: ", custom_out[1].shape)
     print("siglip_original-last_hidden_state.shape: ", original_out[0].shape)
     print("siglip_original-afterPooling.shape: ", original_out[1].shape)
     cosine_similarity = F.cosine_similarity(custom_out[1], original_out[1])
