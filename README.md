@@ -15,7 +15,7 @@ cosine_similarity.min():  tensor(0.9999)
 ```
 
 ### architecture
-![image](./architecture.jpeg)
+![image](./assets/architecture.jpeg)
 
 **Custom Model**
 
@@ -115,3 +115,13 @@ original_model :  SiglipVisionModel(
   )
 )
 ```
+
+### visualization
+```bash
+uv run visualize-fig0.py
+uv run visualize-fig1.py
+```
+
+### result
+![Fig0](./assets/Figure_0.png)
+![Fig1](./assets/Figure_1.png)
