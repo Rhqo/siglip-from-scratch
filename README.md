@@ -2,7 +2,7 @@
 
 ### run
 ```bash
-uv run main.py
+uv run compare_origin.py
 ```
 
 ### result
