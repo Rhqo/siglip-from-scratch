@@ -120,8 +120,10 @@ original_model :  SiglipVisionModel(
 ```bash
 uv run visualize-fig0.py
 uv run visualize-fig1.py
+uv run visualize-fig2.py
 ```
 
 ### result
 ![Fig0](./assets/Figure_0.png)
 ![Fig1](./assets/Figure_1.png)
+![Fig2](./assets/Figure_2.png)
