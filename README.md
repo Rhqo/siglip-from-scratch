@@ -7,11 +7,12 @@ uv run compare_origin.py
 
 ### result
 ```bash
-siglip_custom.shape:  torch.Size([1, 196, 768])
-siglip_original.shape:  torch.Size([1, 196, 768])
+siglip_custom-last_hidden_state.shape:  torch.Size([1, 196, 768])
+siglip_custom-afterPooling.shape:  torch.Size([1, 768])
+siglip_original-last_hidden_state.shape:  torch.Size([1, 196, 768])
 siglip_original-afterPooling.shape:  torch.Size([1, 768])
 cosine_similarity.mean():  tensor(1.0000)
-cosine_similarity.min():  tensor(0.9999)
+cosine_similarity.min():  tensor(1.0000)
 ```
 
 ### architecture
@@ -37,31 +38,43 @@ print("custom_model : ", custom_model)
 
 ```bash
 custom_model :  SigLipVisionModel(
-(transformer): SigLipVisionTransformer(
+  (transformer): SigLipVisionTransformer(
     (embeddings): VisionEmbeddings(
-    (patch_embedding): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), padding=valid)
-    (position_embedding): Embedding(196, 768)
+      (patch_embedding): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16), padding=valid)
+      (position_embedding): Embedding(196, 768)
     )
     (encoder): SigLipEncoder(
-    (encoder_blocks): ModuleList(
+      (encoder_blocks): ModuleList(
         (0-11): 12 x EncoderBlock(
-        (layer_norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
-        (self_attn): MultiheadAttention(
+          (layer_norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attn): MultiheadAttention(
             (k_proj): Linear(in_features=768, out_features=768, bias=True)
             (v_proj): Linear(in_features=768, out_features=768, bias=True)
             (q_proj): Linear(in_features=768, out_features=768, bias=True)
             (out_proj): Linear(in_features=768, out_features=768, bias=True)
-        )
-        (layer_norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
-        (mlp): MLP(
+          )
+          (layer_norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLP(
+            (activation_gelu): GELU(approximate='none')
             (fc1): Linear(in_features=768, out_features=3072, bias=True)
             (fc2): Linear(in_features=3072, out_features=768, bias=True)
+          )
         )
-        )
-    )
+      )
     )
     (post_layernorm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
-)
+    (attn_pooling_head): MultiheadAttentionPoolingHead(
+      (attention): MultiheadAttention(
+        (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+      )
+      (layernorm): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+      (mlp): MLP(
+        (activation_gelu): GELU(approximate='none')
+        (fc1): Linear(in_features=768, out_features=3072, bias=True)
+        (fc2): Linear(in_features=3072, out_features=768, bias=True)
+      )
+    )
+  )
 )
 ```
 
